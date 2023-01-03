@@ -3,11 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "test": "test",
-    "start:dev": "nodemon -e ts -w ./src -x npm run watch:serve",
-    "watch:serve": "node --loader ts-node/esm src/index.ts",
+    "start:dev": "nodemon ./src/index.ts",
     "start:prod": "tsc && node ./dist/index.js"
   },
   "repository": {
@@ -21,10 +20,14 @@
   },
   "homepage": "https://github.com/LiliyaSm/crud-api#readme",
   "devDependencies": {
+    "@types/uuid": "^9.0.0",
     "dotenv": "^16.0.3",
     "nodemon": "^2.0.20",
     "prettier": "^2.8.1",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
   }
 }

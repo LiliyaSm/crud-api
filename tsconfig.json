@@ -1,19 +1,21 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "commonjs",
     "esModuleInterop": true,
     "target": "es6",
     "allowJs": true,
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",
-    "rootDir": "src",
-    "removeComments": true
+    "forceConsistentCasingInFileNames": true,
+    "removeComments": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedParameters": true,
+    "strictFunctionTypes": true,
+    "useUnknownInCatchVariables": true
   },
-  //   "ts-node": {
-  //     "compilerOptions": {
-  //       "module": "CommonJS"
-  //     }
-  //   },
+  "exclude": ["dist", "node_modules"],
+  "include": ["src/**/*"],
   "lib": ["es2015"]
 }
