@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "esModuleInterop": true,
+    "target": "es6",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "removeComments": true
+  },
+  //   "ts-node": {
+  //     "compilerOptions": {
+  //       "module": "CommonJS"
+  //     }
+  //   },
+  "lib": ["es2015"]
+}
