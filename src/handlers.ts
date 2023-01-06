@@ -1,7 +1,9 @@
 import { IncomingMessage, ServerResponse } from "http";
+import {cpus} from "os";
 import InMemoryDatabase from "./inMemoryDatabase";
 import { IDatabase } from "./types";
 import { validate } from "uuid";
+import http from "http";
 
 const db: IDatabase = new InMemoryDatabase();
 
@@ -34,20 +36,48 @@ export const endResponse = (
   response.end(message);
 };
 
-// export const handleError = (error: Error, response: ServerResponse) => {
-//   if (error instanceof BasicOperationalError) {
-//     endResponse(response, error.statusCode, error.message);
-//   } else {
-//     console.log(error);
-//     endResponse(response);
-//   }
-// };
+const PORT = 4000;
+
+const firstWorkerPort = PORT + 1;
+const totalWorkers = cpus().length;
+let currWorker = 0;
+
+
+export const loadBalancerHandler = (
+  request: IncomingMessage,
+  response: ServerResponse
+) => {
+  try {
+    const host = `localhost`;
+    const connector = http
+      .request(
+        {
+          host: host,
+          port: firstWorkerPort + currWorker,
+          path: request.url,
+          protocol: "http:",
+          method: request.method,
+          headers: request.headers,
+        },
+        (res) => res.pipe(response)
+      )
+      .on("error", () => {
+        endResponse(response);
+      });
+    request.pipe(connector);
+    currWorker = (currWorker + 1) % totalWorkers;
+  } catch {
+    endResponse(response);
+  }
+};
 
 export const handler = (
   request: IncomingMessage,
   response: ServerResponse
 ): void => {
   try {
+    console.log(`worker on ${process.env.port} got request`);
+
     const { url: requestUrl = "", method } = request;
     const tokens = requestUrl.split("/");
     const [_, param1, param2, param3] = tokens;
@@ -56,7 +86,7 @@ export const handler = (
       return;
     }
     if (tokens.length === 4 && !validate(param3)) {
-      endResponse(response, 400, "user Id is not valid uuid");
+      endResponse(response, 400, "User Id is not valid uuid");
       return;
     }
     switch (tokens.length) {
@@ -83,7 +113,7 @@ export const handler = (
                   endResponse(
                     response,
                     400,
-                    "request body does not contain required fields"
+                    "Request body does not contain required fields"
                   );
                 }
               });
@@ -119,7 +149,7 @@ export const handler = (
                 db.set(updatedUser);
                 endResponse(response, 200, JSON.stringify(updatedUser));
               } else {
-                endResponse(response, 404, "user Id doesn't exist");
+                endResponse(response, 404, "User Id doesn't exist");
               }
             });
             break;
@@ -129,7 +159,7 @@ export const handler = (
               db.delete(param3);
               endResponse(response, 200, "Deleted");
             } else {
-              endResponse(response, 404, "user Id doesn't exist");
+              endResponse(response, 404, "User Id doesn't exist");
             }
             break;
           }
