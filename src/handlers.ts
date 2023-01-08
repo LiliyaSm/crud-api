@@ -1,18 +1,19 @@
 import { IncomingMessage, ServerResponse } from "http";
-import {cpus} from "os";
+import { cpus } from "os";
 import InMemoryDatabase from "./inMemoryDatabase";
 import { IDatabase } from "./types";
 import { validate } from "uuid";
+import RemoteDataBase from "./RemoteDataBase";
 import http from "http";
 
-const db: IDatabase = new InMemoryDatabase();
+// const db: IDatabase = new InMemoryDatabase();
 
-const httpStatusCodes = {
-  OK: 200,
-  BAD_REQUEST: 400,
-  NOT_FOUND: 404,
-  INTERNAL_SERVER: 500,
-};
+// const httpStatusCodes = {
+//   OK: 200,
+//   BAD_REQUEST: 400,
+//   NOT_FOUND: 404,
+//   INTERNAL_SERVER: 500,
+// };
 
 // export class BasicOperationalError extends Error {
 //   statusCode: number;
@@ -42,18 +43,16 @@ const firstWorkerPort = PORT + 1;
 const totalWorkers = cpus().length;
 let currWorker = 0;
 
-
 export const loadBalancerHandler = (
   request: IncomingMessage,
   response: ServerResponse
 ) => {
   try {
-    const host = `localhost`;
     const connector = http
       .request(
         {
-          host: host,
-          port: firstWorkerPort + currWorker,
+          host: "localhost",
+          port: firstWorkerPort + currWorker, //PORT + totalWorkers
           path: request.url,
           protocol: "http:",
           method: request.method,
@@ -61,23 +60,60 @@ export const loadBalancerHandler = (
         },
         (res) => res.pipe(response)
       )
-      .on("error", () => {
+      .on("error", (err) => {
+        console.log(err);
         endResponse(response);
       });
     request.pipe(connector);
     currWorker = (currWorker + 1) % totalWorkers;
-  } catch {
+  } catch (err) {
+    console.log(err);
     endResponse(response);
   }
 };
 
+export const workerHandler = (
+  request: IncomingMessage,
+  response: ServerResponse
+): void => {
+  console.log(`worker on ${process.env.port} got request`);
+  const db: IDatabase = new RemoteDataBase();
+  basicHandler(request, response, db);
+};
+
+const db: IDatabase = new InMemoryDatabase();
 export const handler = (
   request: IncomingMessage,
   response: ServerResponse
 ): void => {
-  try {
-    console.log(`worker on ${process.env.port} got request`);
+  basicHandler(request, response, db);
+};
 
+export const dbHandler = (
+  request: IncomingMessage,
+  response: ServerResponse
+) => {
+
+  let body: string = "";
+  request.on("data", (chunk) => {
+    body += chunk;
+  });
+
+  request.on("end", async function () {
+    const bodyValue = JSON.parse(body);
+    const { method, value } = bodyValue;
+    let result = await db[method](value);
+    response.write(JSON.stringify(result));
+    // endResponse(response, 201, JSON.stringify(result));
+  });
+};
+
+export const basicHandler = async (
+  request: IncomingMessage,
+  response: ServerResponse,
+  db: IDatabase = new InMemoryDatabase()
+): Promise<void> => {
+  try {
     const { url: requestUrl = "", method } = request;
     const tokens = requestUrl.split("/");
     const [_, param1, param2, param3] = tokens;
@@ -93,7 +129,7 @@ export const handler = (
       case 3:
         switch (method) {
           case "GET":
-            const allRecords = db.getAllRecords();
+            const allRecords = await db.getAllRecords();
             endResponse(response, 200, JSON.stringify(allRecords));
             break;
           case "POST":
@@ -102,12 +138,12 @@ export const handler = (
               request.on("data", (chunk) => {
                 body += chunk;
               });
-              request.on("end", function () {
+              request.on("end", async function () {
                 const value = JSON.parse(body);
                 const { name, age, hobbies } = value;
                 let newUser;
                 if (name && !isNaN(age) && Array.isArray(hobbies)) {
-                  newUser = db.set(value);
+                  newUser = await db.set(value);
                   endResponse(response, 201, JSON.stringify(newUser));
                 } else {
                   endResponse(
@@ -172,7 +208,8 @@ export const handler = (
         endResponse(response, 404, "Request to non-existing endpoint!");
         break;
     }
-  } catch {
+  } catch (err) {
+    console.log(err);
     endResponse(response);
   }
 };

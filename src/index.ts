@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 import http from "http";
 import { handler } from "./handlers";
 
-
 dotenv.config();
 const port = process.env["PORT"];
 

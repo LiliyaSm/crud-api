@@ -7,7 +7,7 @@ class InMemoryDatabase implements IDatabase {
   constructor() {
     this.cache = [];
   }
-  set(value: IPerson): Required<IPerson> {
+  async set(value: IPerson): Promise<Required<IPerson>> {
     const id = value.id || uuidv4();
     const newUser = { id, ...value };
     this.cache.push(newUser);
@@ -17,7 +17,7 @@ class InMemoryDatabase implements IDatabase {
     const person = this.cache.find(({ id }) => id === userId);
     return person;
   }
-  getAllRecords(): IPerson[] {
+  async getAllRecords(): Promise<IPerson[]> {
     return this.cache;
   }
   delete(userId: string) {

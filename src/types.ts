@@ -5,8 +5,9 @@ export interface IPerson {
   hobbies: string[];
 }
 export interface IDatabase {
-  set(value: IPerson): IPerson;
+  [key: string]: any;
+  set(value: IPerson): Promise<IPerson>;
   get(userId: string): IPerson | undefined;
-  getAllRecords(): IPerson[];
+  getAllRecords(): Promise<IPerson[]>;
   delete(userId: string): void;
 }
