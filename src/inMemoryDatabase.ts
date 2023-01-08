@@ -13,9 +13,10 @@ class InMemoryDatabase implements IDatabase {
     this.cache.push(newUser);
     return newUser;
   }
-  get(userId: string): IPerson | undefined {
+  async get(userId: string): Promise<IPerson | null> {
     const person = this.cache.find(({ id }) => id === userId);
-    return person;
+    const res = person ? person : null;
+    return res;
   }
   async getAllRecords(): Promise<IPerson[]> {
     return this.cache;

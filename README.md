@@ -24,3 +24,10 @@ To run the app in production mode:
 ```bash
 npm run start:prod
 ```
+
+To run the app using multiple instances of application (Node.js Cluster API):
+
+```bash
+npm run start:multi
+```
+The database will be launched in a separate process and workers will access it using HTTP requests

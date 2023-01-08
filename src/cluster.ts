@@ -5,6 +5,7 @@ import { workerHandler, loadBalancerHandler, dbHandler } from "./handlers";
 
 const numberOfCores = cpus().length;
 const PORT = 4000;
+export const DATABASE_PORT = PORT + 1 + numberOfCores;
 
 if (cluster.isPrimary) {
   for (let i = 0; i < numberOfCores; i += 1) {
@@ -14,7 +15,7 @@ if (cluster.isPrimary) {
   createServer(loadBalancerHandler).listen(PORT, () => {
     console.log(`load balancer on http://localhost:${PORT}`);
   });
-  cluster.fork({ port: PORT + 1 + numberOfCores, role: "db" });
+  cluster.fork({ port: DATABASE_PORT, role: "db" });
 } else {
   if (process.env.role === "worker") {
     createServer(workerHandler).listen(process.env.port, () => {

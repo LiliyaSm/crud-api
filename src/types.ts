@@ -7,7 +7,7 @@ export interface IPerson {
 export interface IDatabase {
   [key: string]: any;
   set(value: IPerson): Promise<IPerson>;
-  get(userId: string): IPerson | undefined;
+  get(userId: string): Promise<IPerson | null>;
   getAllRecords(): Promise<IPerson[]>;
   delete(userId: string): void;
 }

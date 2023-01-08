@@ -1,24 +1,28 @@
 import { IDatabase, IPerson } from "./types";
 import http from "http";
-import { v4 as uuidv4 } from "uuid";
+import { cpus } from "os";
 
-const makeRequest = (method: string, value?: IPerson) => {
+
+const numberOfCores = cpus().length;
+const PORT = 4000;
+export const DATABASE_PORT = PORT + 1 + numberOfCores;
+
+const makeRequest = (method: string, value?: any) => {
   const jsonObject = JSON.stringify({
     method,
     value,
   });
 
-  function httprequest() {
+  function httpRequest() {
     return new Promise((resolve) => {
       const req = http.request(
         {
           host: "localhost",
-          port: 4009, //PORT + totalWorkers
+          port: DATABASE_PORT,
           protocol: "http:",
           method: "post",
           headers: {
             "Content-Type": "application/json",
-            // "Content-Length": Buffer.byteLength(jsonObject, "utf8"),
           },
         },
         (res: any) => {
@@ -31,7 +35,7 @@ const makeRequest = (method: string, value?: IPerson) => {
       req.end();
     });
   }
-  return httprequest().then((data) => {
+  return httpRequest().then((data) => {
     return data;
   });
 };
@@ -46,17 +50,17 @@ class RemoteDataBase implements IDatabase {
     const dbResult = await makeRequest("set", value);
     return dbResult as Required<IPerson>;
   }
-  get(userId: string): IPerson | undefined {
-    const person = this.cache.find(({ id }) => id === userId);
-    return person;
+  async get(userId: string): Promise<Required<IPerson> | null> {
+    const dbResult = await makeRequest("get", userId);
+    return dbResult as Required<IPerson>;
   }
 
   async getAllRecords(): Promise<IPerson[]> {
     const dbResult = await makeRequest("getAllRecords");
     return dbResult as IPerson[];
   }
-  delete(userId: string) {
-    this.cache = this.cache.filter(({ id }) => id !== userId);
+  delete(userId: string): void {
+    makeRequest("delete", userId);
   }
 }
 export default RemoteDataBase;

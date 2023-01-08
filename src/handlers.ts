@@ -6,25 +6,12 @@ import { validate } from "uuid";
 import RemoteDataBase from "./RemoteDataBase";
 import http from "http";
 
-// const db: IDatabase = new InMemoryDatabase();
-
-// const httpStatusCodes = {
-//   OK: 200,
-//   BAD_REQUEST: 400,
-//   NOT_FOUND: 404,
-//   INTERNAL_SERVER: 500,
-// };
-
-// export class BasicOperationalError extends Error {
-//   statusCode: number;
-//   constructor(message: string, statusCode: number) {
-//     super();
-//     Object.setPrototypeOf(this, new.target.prototype);
-//     this.message = message;
-//     this.statusCode = statusCode;
-//     Error.captureStackTrace(this);
-//   }
-// }
+const httpStatusCodes = {
+  OK: 200,
+  BAD_REQUEST: 400,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER: 500,
+};
 
 export const endResponse = (
   response: ServerResponse,
@@ -58,16 +45,17 @@ export const loadBalancerHandler = (
           method: request.method,
           headers: request.headers,
         },
-        (res) => res.pipe(response)
+        (res) => {
+          response.writeHead(Number(res.statusCode), res.headers);
+          res.pipe(response);
+        }
       )
-      .on("error", (err) => {
-        console.log(err);
+      .on("error", () => {
         endResponse(response);
       });
     request.pipe(connector);
     currWorker = (currWorker + 1) % totalWorkers;
-  } catch (err) {
-    console.log(err);
+  } catch {
     endResponse(response);
   }
 };
@@ -93,7 +81,6 @@ export const dbHandler = (
   request: IncomingMessage,
   response: ServerResponse
 ) => {
-
   let body: string = "";
   request.on("data", (chunk) => {
     body += chunk;
@@ -103,8 +90,7 @@ export const dbHandler = (
     const bodyValue = JSON.parse(body);
     const { method, value } = bodyValue;
     let result = await db[method](value);
-    response.write(JSON.stringify(result));
-    // endResponse(response, 201, JSON.stringify(result));
+    if (result) response.write(JSON.stringify(result));
   });
 };
 
@@ -122,7 +108,7 @@ export const basicHandler = async (
       return;
     }
     if (tokens.length === 4 && !validate(param3)) {
-      endResponse(response, 400, "User Id is not valid uuid");
+      endResponse(response, httpStatusCodes.BAD_REQUEST, "User Id is not valid uuid");
       return;
     }
     switch (tokens.length) {
@@ -130,7 +116,7 @@ export const basicHandler = async (
         switch (method) {
           case "GET":
             const allRecords = await db.getAllRecords();
-            endResponse(response, 200, JSON.stringify(allRecords));
+            endResponse(response, httpStatusCodes.OK, JSON.stringify(allRecords));
             break;
           case "POST":
             if (method === "POST") {
@@ -148,7 +134,7 @@ export const basicHandler = async (
                 } else {
                   endResponse(
                     response,
-                    400,
+                    httpStatusCodes.BAD_REQUEST,
                     "Request body does not contain required fields"
                   );
                 }
@@ -156,19 +142,18 @@ export const basicHandler = async (
             }
             break;
           default:
-            endResponse(response, 404, "Request to non-existing endpoint!");
+            endResponse(response, httpStatusCodes.NOT_FOUND, "Request to non-existing endpoint!");
             break;
         }
         break;
       case 4:
         switch (method) {
           case "GET":
-            const user = db.get(param3);
+            const user = await db.get(param3);
             if (user) {
-              endResponse(response, 200, JSON.stringify(user));
+              endResponse(response, httpStatusCodes.OK, JSON.stringify(user));
             } else {
-              console.log("teest");
-              endResponse(response, 404, "user Id doesn't exist");
+              endResponse(response, httpStatusCodes.NOT_FOUND, "user Id doesn't exist");
             }
             break;
           case "PUT":
@@ -176,40 +161,39 @@ export const basicHandler = async (
             request.on("data", (chunk) => {
               body += chunk;
             });
-            request.on("end", function () {
+            request.on("end", async function () {
               const newBody = JSON.parse(body);
-              const user = db.get(param3);
+              const user = await db.get(param3);
               if (user) {
                 db.delete(param3);
                 const updatedUser = { id: param3, ...newBody };
                 db.set(updatedUser);
-                endResponse(response, 200, JSON.stringify(updatedUser));
+                endResponse(response, httpStatusCodes.OK, JSON.stringify(updatedUser));
               } else {
-                endResponse(response, 404, "User Id doesn't exist");
+                endResponse(response, httpStatusCodes.NOT_FOUND, "User Id doesn't exist");
               }
             });
             break;
           case "DELETE": {
-            const user = db.get(param3);
+            const user = await db.get(param3);
             if (user) {
               db.delete(param3);
-              endResponse(response, 200, "Deleted");
+              endResponse(response, httpStatusCodes.OK, "Deleted");
             } else {
-              endResponse(response, 404, "User Id doesn't exist");
+              endResponse(response, httpStatusCodes.NOT_FOUND, "User Id doesn't exist");
             }
             break;
           }
           default:
-            endResponse(response, 404, "Request to non-existing endpoint!");
+            endResponse(response, httpStatusCodes.NOT_FOUND, "Request to non-existing endpoint!");
             break;
         }
         break;
       default:
-        endResponse(response, 404, "Request to non-existing endpoint!");
+        endResponse(response, httpStatusCodes.NOT_FOUND, "Request to non-existing endpoint!");
         break;
     }
-  } catch (err) {
-    console.log(err);
+  } catch {
     endResponse(response);
   }
 };
