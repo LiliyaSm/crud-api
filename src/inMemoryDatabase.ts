@@ -21,8 +21,10 @@ class InMemoryDatabase implements IDatabase {
   async getAllRecords(): Promise<IPerson[]> {
     return this.cache;
   }
-  delete(userId: string) {
+  
+  delete(userId: string): Promise<void> {
     this.cache = this.cache.filter(({ id }) => id !== userId);
+    return new Promise(res => res());
   }
 }
 export default InMemoryDatabase;

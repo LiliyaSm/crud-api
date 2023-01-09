@@ -104,11 +104,19 @@ export const basicHandler = async (
     const tokens = requestUrl.split("/");
     const [_, param1, param2, param3] = tokens;
     if (param1 !== "api" || param2 !== "users") {
-      endResponse(response, 404, "Request to non-existing endpoint!");
+      endResponse(
+        response,
+        httpStatusCodes.NOT_FOUND,
+        "Request to non-existing endpoint!"
+      );
       return;
     }
     if (tokens.length === 4 && !validate(param3)) {
-      endResponse(response, httpStatusCodes.BAD_REQUEST, "User Id is not valid uuid");
+      endResponse(
+        response,
+        httpStatusCodes.BAD_REQUEST,
+        "User Id is not valid uuid"
+      );
       return;
     }
     switch (tokens.length) {
@@ -116,33 +124,39 @@ export const basicHandler = async (
         switch (method) {
           case "GET":
             const allRecords = await db.getAllRecords();
-            endResponse(response, httpStatusCodes.OK, JSON.stringify(allRecords));
+            endResponse(
+              response,
+              httpStatusCodes.OK,
+              JSON.stringify(allRecords)
+            );
             break;
           case "POST":
-            if (method === "POST") {
-              let body: string = "";
-              request.on("data", (chunk) => {
-                body += chunk;
-              });
-              request.on("end", async function () {
-                const value = JSON.parse(body);
-                const { name, age, hobbies } = value;
-                let newUser;
-                if (name && !isNaN(age) && Array.isArray(hobbies)) {
-                  newUser = await db.set(value);
-                  endResponse(response, 201, JSON.stringify(newUser));
-                } else {
-                  endResponse(
-                    response,
-                    httpStatusCodes.BAD_REQUEST,
-                    "Request body does not contain required fields"
-                  );
-                }
-              });
-            }
+            let body: string = "";
+            request.on("data", (chunk) => {
+              body += chunk;
+            });
+            request.on("end", async function () {
+              const value = JSON.parse(body);
+              const { name, age, hobbies } = value;
+              let newUser;
+              if (name && !isNaN(age) && Array.isArray(hobbies)) {
+                newUser = await db.set(value);
+                endResponse(response, 201, JSON.stringify(newUser));
+              } else {
+                endResponse(
+                  response,
+                  httpStatusCodes.BAD_REQUEST,
+                  "Request body does not contain required fields"
+                );
+              }
+            });
             break;
           default:
-            endResponse(response, httpStatusCodes.NOT_FOUND, "Request to non-existing endpoint!");
+            endResponse(
+              response,
+              httpStatusCodes.NOT_FOUND,
+              "Request to non-existing endpoint!"
+            );
             break;
         }
         break;
@@ -153,7 +167,11 @@ export const basicHandler = async (
             if (user) {
               endResponse(response, httpStatusCodes.OK, JSON.stringify(user));
             } else {
-              endResponse(response, httpStatusCodes.NOT_FOUND, "user Id doesn't exist");
+              endResponse(
+                response,
+                httpStatusCodes.NOT_FOUND,
+                "user Id doesn't exist"
+              );
             }
             break;
           case "PUT":
@@ -168,9 +186,17 @@ export const basicHandler = async (
                 db.delete(param3);
                 const updatedUser = { id: param3, ...newBody };
                 db.set(updatedUser);
-                endResponse(response, httpStatusCodes.OK, JSON.stringify(updatedUser));
+                endResponse(
+                  response,
+                  httpStatusCodes.OK,
+                  JSON.stringify(updatedUser)
+                );
               } else {
-                endResponse(response, httpStatusCodes.NOT_FOUND, "User Id doesn't exist");
+                endResponse(
+                  response,
+                  httpStatusCodes.NOT_FOUND,
+                  "User Id doesn't exist"
+                );
               }
             });
             break;
@@ -180,17 +206,29 @@ export const basicHandler = async (
               db.delete(param3);
               endResponse(response, httpStatusCodes.OK, "Deleted");
             } else {
-              endResponse(response, httpStatusCodes.NOT_FOUND, "User Id doesn't exist");
+              endResponse(
+                response,
+                httpStatusCodes.NOT_FOUND,
+                "User Id doesn't exist"
+              );
             }
             break;
           }
           default:
-            endResponse(response, httpStatusCodes.NOT_FOUND, "Request to non-existing endpoint!");
+            endResponse(
+              response,
+              httpStatusCodes.NOT_FOUND,
+              "Request to non-existing endpoint!"
+            );
             break;
         }
         break;
       default:
-        endResponse(response, httpStatusCodes.NOT_FOUND, "Request to non-existing endpoint!");
+        endResponse(
+          response,
+          httpStatusCodes.NOT_FOUND,
+          "Request to non-existing endpoint!"
+        );
         break;
     }
   } catch {

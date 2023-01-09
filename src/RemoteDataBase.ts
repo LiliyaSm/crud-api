@@ -46,10 +46,12 @@ class RemoteDataBase implements IDatabase {
   constructor() {
     this.cache = [];
   }
+  
   async set(value: IPerson): Promise<Required<IPerson>> {
     const dbResult = await makeRequest("set", value);
     return dbResult as Required<IPerson>;
   }
+
   async get(userId: string): Promise<Required<IPerson> | null> {
     const dbResult = await makeRequest("get", userId);
     return dbResult as Required<IPerson>;
@@ -59,8 +61,10 @@ class RemoteDataBase implements IDatabase {
     const dbResult = await makeRequest("getAllRecords");
     return dbResult as IPerson[];
   }
-  delete(userId: string): void {
-    makeRequest("delete", userId);
+
+  async delete(userId: string): Promise<void> {
+    await makeRequest("delete", userId);
+    return new Promise(r => r());
   }
 }
 export default RemoteDataBase;

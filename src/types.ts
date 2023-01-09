@@ -9,5 +9,5 @@ export interface IDatabase {
   set(value: IPerson): Promise<IPerson>;
   get(userId: string): Promise<IPerson | null>;
   getAllRecords(): Promise<IPerson[]>;
-  delete(userId: string): void;
+  delete(userId: string): Promise<void>;
 }
