@@ -1,6 +1,7 @@
 task: https://github.com/AlreadyBored/nodejs-assignments/blob/main/assignments/crud-api/assignment.md
 
 Only allowed libraries are used:
+
 ![](dependencies.jpg)
 ## Common setup
 
