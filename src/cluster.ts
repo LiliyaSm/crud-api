@@ -13,13 +13,15 @@ if (cluster.isPrimary) {
     cluster.fork({ port: workerPort, role: "worker" });
   }
   createServer(loadBalancerHandler).listen(PORT, () => {
-    console.log(`load balancer on http://localhost:${PORT}`);
+    console.log(
+      `load balancer is listening for requests on http://localhost:${PORT}/api`
+    );
   });
   cluster.fork({ port: DATABASE_PORT, role: "db" });
 } else {
   if (process.env.role === "worker") {
     createServer(workerHandler).listen(process.env.port, () => {
-      console.log(`worker on http://localhost:${process.env.port}`);
+      console.log(`worker on http://localhost:${process.env.port}/api`);
     });
   } else {
     createServer(dbHandler).listen(process.env.port, () => {

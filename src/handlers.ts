@@ -64,7 +64,7 @@ export const workerHandler = (
   request: IncomingMessage,
   response: ServerResponse
 ): void => {
-  console.log(`worker on ${process.env.port} got request`);
+  console.log(`worker on ${process.env.port}/api got the request`);
   const db: IDatabase = new RemoteDataBase();
   basicHandler(request, response, db);
 };

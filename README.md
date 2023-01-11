@@ -1,5 +1,7 @@
 task: https://github.com/AlreadyBored/nodejs-assignments/blob/main/assignments/crud-api/assignment.md
 
+Only allowed libraries are used:
+![](dependencies.jpg)
 ## Common setup
 
 Clone the repo and install the dependencies.
@@ -21,6 +23,8 @@ npm run start:dev
 
 To run the app in production mode:
 
+Bundle is building using webpack
+
 ```bash
 npm run start:prod
 ```
@@ -32,7 +36,7 @@ npm run start:multi
 ```
 The database will be launched in a separate process and workers will access it using HTTP requests
 
-To run tests 
+To run tests (3 test cases)
 
 ```bash
 npm run test

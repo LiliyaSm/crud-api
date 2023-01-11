@@ -7,7 +7,8 @@
   "scripts": {
     "test": "jest",
     "start:dev": "nodemon ./src/index.ts",
-    "start:prod": "tsc && node ./dist/index.js",
+    "start:prod": "npx webpack && node ./dist/bundle.js",
+    "start:prodTSX": "tsc && node ./dist/index.js",
     "start:multi": "nodemon ./src/cluster.ts"
   },
   "repository": {
@@ -27,7 +28,6 @@
   "homepage": "https://github.com/LiliyaSm/crud-api#readme",
   "devDependencies": {
     "@types/jest": "^29.2.5",
-    "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",
     "dotenv": "^16.0.3",
     "jest": "^29.3.1",
@@ -35,10 +35,15 @@
     "prettier": "^2.8.1",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "mocha": "^10.2.0",
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "ts-loader": "^9.4.2",
     "uuid": "^9.0.0"
+  },
+  "browser": {
+    "fs": false
   }
 }
