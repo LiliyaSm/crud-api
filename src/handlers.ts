@@ -8,6 +8,7 @@ import http from "http";
 
 const httpStatusCodes = {
   OK: 200,
+  NO_CONTENT_SUCCESS: 204,
   BAD_REQUEST: 400,
   NOT_FOUND: 404,
   INTERNAL_SERVER: 500,
@@ -204,7 +205,7 @@ export const basicHandler = async (
             const user = await db.get(param3);
             if (user) {
               db.delete(param3);
-              endResponse(response, httpStatusCodes.OK, "Deleted");
+              endResponse(response, httpStatusCodes.NO_CONTENT_SUCCESS, "Deleted");
             } else {
               endResponse(
                 response,
