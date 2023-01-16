@@ -21,7 +21,7 @@ cd crud-api
 Checkout to the development branch:
 
 ```bash
- git checkout develop
+ git checkout development
 ```
 
 Install the dependencies:
@@ -69,8 +69,10 @@ npm run test
 
 example body JSON (all fields are required!):
 
+```json
 {
   "username": string,
   "age": number,
   "hobbies": []
 }
+```
