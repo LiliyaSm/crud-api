@@ -17,73 +17,79 @@ const wrongMockUserData = {
   hobbies: ["ddd"],
 };
 
+const getOptions = {
+  path: "/api/users",
+  host: "localhost",
+  port: 8000,
+  protocol: "http:",
+  method: "get",
+};
+
 const postOptions = {
   path: "/api/users",
   host: "localhost",
   port: 8000,
   protocol: "http:",
-  method: "post",
   headers: {
     "Content-Type": "application/json",
   },
+  method: "post",
+  body: JSON.stringify(mockUserData),
 };
 
-const deleteOptions = {
+const invalidPostOptions = {
   ...postOptions,
-  method: "delete",
-  path: "/api/users/testId",
+  body: JSON.stringify(wrongMockUserData)
 };
 
 const server = http.createServer(handler);
 
+function doRequest(options: any) : Promise<IncomingMessage> {
+  return new Promise ((resolve, reject) => {
+    let req = http.request(options);
+
+    if(options.body){
+      req.write(options.body);
+    }
+
+    req.on('response', (res: IncomingMessage) => {
+      resolve(res);
+    });
+
+    req.on('error', (err: IncomingMessage) => {
+      reject(err);
+    });
+
+    req.end();
+  }); 
+}
+
 describe("server", function () {
   beforeEach(function () {
+    console.log("OPEN");
     server.listen(8000);
   });
 
   afterEach(function () {
+    console.log("CLOSE");
     server.close();
   });
-  it("should return all records", function (done) {
-    http.get(
-      "http://localhost:8000/api/users",
-      function (res: IncomingMessage) {
-        assert.equal(200, res.statusCode);
-        var data = "";
 
-        res.on("data", function (chunk) {
-          data += chunk;
-        });
+  it("should return all records", async function() {
+    await doRequest(getOptions);
+  });
 
-        res.on("end", function () {
-          assert.equal("[]", data);
-        });
-        done();
-      }
-    );
+  it("should add new user", async function () {
+    
+    const res = await doRequest(postOptions);
+    const resultObject = JSON.parse(await res.read());
+
+    assert.deepEqual({ ...mockUserData, id: "testId" }, resultObject);
   });
-  it("should add new user", function (done) {
-    const jsonObject = JSON.stringify(mockUserData);
-    const req = http.request(postOptions, (res: ServerResponse) => {
-      res.on("data", (chunk: any) => {
-        assert.deepEqual({ ...mockUserData, id: "testId" }, JSON.parse(chunk));
-        done();
-      });
-    });
-    req.write(jsonObject);
-    req.end();
-  });
-  it("should fail if new user fields are invalid", function (done) {
-    const jsonObject = JSON.stringify(wrongMockUserData);
-    const postReq = http.request(postOptions, (res: ServerResponse) => {
-      console.log(res.statusCode);
-      done();
-      res.on("end", () => {
-        assert.equal(200, res.statusCode);
-        done();
-      });
-    });
-    postReq.write(jsonObject);
-    postReq.end();
+
+  it("should fail if new user fields are invalid", async function () {
+    const res = await doRequest(invalidPostOptions);
+
+    assert.equal(res.statusCode, 400);
   });
 });

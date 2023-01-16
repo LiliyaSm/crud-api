@@ -71,8 +71,8 @@ example body JSON (all fields are required!):
 
 ```json
 {
-  "username": string,
-  "age": number,
+  "username": "string",
+  "age": "number",
   "hobbies": []
 }
 ```
